@@ -1,0 +1,100 @@
+'Arps Equations - Decline Curve Analysis
+'
+'Exponential — b = 0
+'Hyperbolic — b is a value other than 0 or 1
+'Harmonic — b = 1
+'
+'
+'When production follows an exponential decline, there are two different ways of defining the decline rate: Nominal and Effective.
+'
+'The first is the nominal decline rate, represented by the symbol "a".
+'The nominal decline rate is defined as: ln(qi/qt)/t
+'
+'The second is the effective decline rate, represented by the symbol "d".
+'The effective decline rate, for a particular time period (typically one year), is defined as: (qi-qt)/qi
+'
+'
+
+'ai = initial nominal decline
+'b is dimensionless
+'di is expressed in %/yr
+
+Function ai(b As Double, di As Double) As Double
+
+    If b = 0 Then
+        ai = -1 * Application.WorksheetFunction.Ln(1 - di)
+    
+    ElseIf b > 0 Then
+        ai = b ^ -1 * ((1 - di) ^ (-b) - 1)
+        
+    End If
+    
+End Function
+
+'d = effective decline, as a function of time
+'b is dimensionless
+
+Function d(a As Double, b As Double) As Double
+
+    If b = 0 Then
+        d = 1 - Exp(-a)
+    
+    ElseIf b > 0 Then
+        d = 1 - (1 + b * a) ^ (-1 / b)
+        
+        
+    End If
+    
+End Function
+
+'a = nominal decline, calculated at any time
+
+Function a(ai As Double, b As Double, tdays As Double) As Double
+
+    a = ai * (1 + b * ai * tdays / 365) ^ -1
+        
+    
+End Function
+
+'qt = daily rate, BOPD or MCFPD.
+'qi is input as BOPD or MCFPD and has the same units as qt
+'tdays is the time from the initial production, measured in days
+
+Function qt(ai As Double, b As Double, qi As Double, tdays As Double) As Double
+
+    If tdays < 0 Then
+        tdays = 0
+    End If
+    
+    If b = 0 Then
+        qt = qi * Exp(-ai * tdays / 365)
+    
+    ElseIf b > 0 Then
+        qt = qi * (1 + b * ai * tdays / 365) ^ (-1 / b)
+        
+        
+    End If
+    
+End Function
+
+
+'Np is the cumulative production in BBLS or MCF (Np typically denotes cum.oil, Gp denotes cum.gas.   They can be used interchangeably here.
+'The cumulative value calculated by this function is always from t=0 to the date which corresponds to the qt input.
+'qt = daily rate, BOPD or MCFPD.
+'qi is input as BOPD or MCFPD and has the same units as qt
+
+Function Np(ai As Double, b As Double, qi As Double, qt As Double) As Double
+
+    If b = 0 Then
+        Np = (qi - qt) / ai * 365
+    
+    ElseIf b = 1 Then
+        Np = qi / ai * Application.WorksheetFunction.Ln(qi / qt) * 365
+        
+     ElseIf b > 0 And b <> 1 Then
+        Np = qi ^ b * (ai * (1 - b)) ^ -1 * (qi ^ (1 - b) - qt ^ (1 - b)) * 365
+                
+    End If
+    
+End Function
+
